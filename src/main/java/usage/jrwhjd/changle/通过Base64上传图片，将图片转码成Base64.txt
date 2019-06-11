@@ -1,0 +1,49 @@
+1.将某路径保存的图片转换成Base64编码
+	public String getPortraitBase64(String portraitName) {
+		Preference p = Preference.current();
+		//获取图片完整路径
+		String portraitPath = p.getString("requestPortraitPath", null) + portraitName;
+		File file = new File(portraitPath);
+		if(file.isFile() && file.exists()){
+			// 将图片文件转化为字节数组字符串，并对其进行Base64编码处理
+			InputStream in = null;
+			byte[] b = null;
+			// 读取图片字节数组
+			try {
+				in = new FileInputStream(portraitPath);
+				b = new byte[in.available()];
+				in.read(b);
+				in.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return Base64.getEncoder().encodeToString(b);
+		}else{
+            return "";
+        }
+	}
+	
+2.通过Base64编码上传图片
+	public void savePortrait(String portraitBase64, String fileName){
+		byte[] b = Base64.getDecoder().decode(portraitBase64);
+		for (int i = 0; i < b.length; i++) {
+			if (b[i] < 0) {
+				// 调整异常数据
+				b[i] += 256;
+			}
+		}
+		Preference p = Preference.current();
+		String savePortraitPath = p.getString("requestPortraitPath", null);
+		try {
+			FileOutputStream out = new FileOutputStream(savePortraitPath + fileName);
+			try {
+				out.write(b);
+				out.flush();
+				out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}

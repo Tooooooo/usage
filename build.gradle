@@ -1,0 +1,103 @@
+apply plugin: 'java'
+
+group 'com.jrwhjd'
+version = '0.1'
+
+// JVM 版本号要求  
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+// java编译的时候缺省状态下会因为中文字符而失败  
+[compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
+
+repositories {
+    maven { url "http://maven.springframework.org/release" }
+    maven { url "http://maven.restlet.org" }
+    mavenCentral()
+}
+
+//定义版本号  
+ext {
+    springVersion = '4.3.20.RELEASE'
+//        hibernateVersion='4.3.1.Final'
+}
+
+/*configurations {
+    // 所有需要忽略的包定义在此  
+    all*.exclude group: 'commons-httpclient'
+    all*.exclude group: 'commons-logging'
+    all*.exclude group: 'commons-beanutils', module: 'commons-beanutils'
+}*/
+
+dependencies {
+    // 通用依赖  
+    compile(
+            'javax.mail:mail:1.4.7',
+            // spring
+//            "org.springframework:spring-tx:$springVersion",
+//            "org.springframework:spring-jdbc:$springVersion",
+//            "org.springframework:spring-context-support:$springVersion",
+//            "org.springframework:spring-webmvc:$springVersion",
+//            "org.springframework:spring-aop:$springVersion",
+//
+//            'com.fasterxml.jackson.core:jackson-databind:2.8.6',
+//            'com.fasterxml.jackson.core:jackson-core:2.8.6',
+//            'com.fasterxml.jackson.core:jackson-annotations:2.8.6',
+//
+//            // log
+            'org.slf4j:slf4j-api:1.7.   22',
+            'org.apache.logging.log4j:log4j-core:2.8',
+            'org.apache.logging.log4j:log4j-api:2.8',
+            'org.apache.logging.log4j:log4j-slf4j-impl:2.8',
+//
+//            // common
+            'org.apache.commons:commons-lang3:3.5',
+            'org.hibernate.validator:hibernate-validator:6.0.1.Final',
+            'org.glassfish:javax.el:3.0.1-b08',
+
+//            'commons-lang:commons-lang:2.6',
+//            'commons-configuration:commons-configuration:1.10',
+//            'commons-collections:commons-collections:3.2.2',
+//            'commons-io:commons-io:2.5',
+//            'commons-codec:commons-codec:1.6',
+//
+//            // msic
+            'org.projectlombok:lombok:1.18.4'
+//            'com.alibaba:fastjson:1.2.9',
+//            'cglib:cglib-nodep:3.2.4',
+//            'com.squareup.okhttp3:okhttp:3.4.2',
+//
+//            // CAptcha验证码
+//            'com.github.cage:cage:1.0'
+    )
+
+    // 依赖maven中不存在的jar  
+    compile fileTree(dir:'libs',include:['*.jar'])
+
+    // 测试依赖  
+    testCompile(
+            "org.springframework:spring-test:$springVersion",
+            "junit:junit:4.11",
+            'org.skyscreamer:jsonassert:1.4.0'  //spring test need this
+    )
+
+    // 依赖maven中不存在的jar  
+    ext.jarTree = fileTree(dir: 'libs', include: '**/*.jar')
+    ext.rootProjectLibs = new File(rootProject.rootDir, 'libs').getAbsolutePath()
+    ext.jarTree += fileTree(dir: rootProjectLibs, include: '**/*.jar')
+    compile jarTree
+}
+
+
+allprojects {
+    task createJavaProject << {
+        sourceSets*.java.srcDirs*.each { it.mkdirs() }
+        sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+    }
+
+    // 显示当前项目下所有用于 compile 的 jar.  
+    task listJars(description: 'Display all compile jars.') << {
+        configurations.compile.each { File file -> println file.name }
+    }
+}
+

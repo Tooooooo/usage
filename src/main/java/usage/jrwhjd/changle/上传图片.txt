@@ -1,0 +1,55 @@
+    @Log4j
+	@RestController
+	@RequestMapping("/BankNet")
+	public class BankNetPointController extends BaseController{
+	
+	@Autowired
+    private BankNetPointService bankNetPointService;
+	
+	public static Set<String> legalSet;
+
+    static {
+        //合法上传的文件后缀
+        legalSet=new HashSet<String>();
+        legalSet.add("jpeg");
+        legalSet.add("bmp");
+        legalSet.add("jpg");
+        legalSet.add("png");
+        legalSet.add("gif");
+    }
+	
+	/**
+     * 上传图片
+     */
+    @RequestMapping(value="1003",method=RequestMethod.POST,produces= MediaType.APPLICATION_JSON_VALUE+";charset=UTF-8")
+    public BankNetResponse uploadPic(@RequestParam(value = "file") MultipartFile file ) String token){
+        // 获取路径
+		String path= Param.bankNetFileupLoad;
+        // 获取原始文件名
+        String originalName=file.getOriginalFilename();
+        int i=originalName.lastIndexOf(".");
+        if(i==-1){
+            return BankNetResponse.no("上传文件格式不正确");
+        }
+        String s = originalName.substring(i+1).toLowerCase();
+        if(!legalSet.contains(s)){
+            return BankNetResponse.no("上传文件只能是图片格式");
+        }
+        //生成本地定义的文件名
+        String fileName = createFileName()+"."+s;
+        //上传图片
+        File targetFile=new File(path,fileName);
+        if(!targetFile.exists()){
+            targetFile.mkdirs();
+        }
+        try{
+            file.transferTo(targetFile);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        BankNetResponse response = BankNetResponse.ok();
+        response.setData(fileName);
+        return response;
+    }
+	
+}

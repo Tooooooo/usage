@@ -1,0 +1,50 @@
+	/**
+     * 查询网点列表
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "1001", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE+ ";charset=UTF-8")
+    public PageResponse getBankNetPointList(@RequestBody BankListRequest request){
+		// 查询结果集
+        List<BankNetPoint> bankNetPointList = bankNetPointService.getBankNetPointList(request);
+        int a = bankNetPointList.size()/request.getPageSize(); //总记录数除以每页数量得出总页数，整除情况下可以得到实际页数，不能整除则比实际页数少一页
+        int page = request.getPage(); //第几页
+        int total = bankNetPointList.size()%request.getPageSize()==0?a:(a+1); //总页数
+        int pageSize = request.getPageSize(); //每页记录数
+        int size = page>=total?(bankNetPointList.size()-pageSize*(total-1)):pageSize; //当前页数量
+        long records = bankNetPointList.size(); //总记录数
+        int fromIndex = (page - 1)*pageSize;
+        int toIndex = page * pageSize;
+        if(toIndex > records){
+            toIndex = (int)records;
+        }
+        return PageResponse.ok(bankNetPointList.subList(fromIndex,toIndex), page, total, pageSize, size, records);
+    }
+	
+	// 请求参数
+	public class BankListRequest extends BaseRequest {
+    private int page;
+    private int pageSize;
+    private int status;
+}
+	
+	// 返回参数
+	public class PageResponse extends BankNetResponse {
+    private int page; //第几页
+    private int Total; //总页数
+    private int pageSize; //每页记录数
+    private int size; //当前页的数量 <= pageSize
+    private long records; //总记录数
+
+    public static PageResponse ok(Object data, int page, int Total, int pageSize, int size, long records) {
+        PageResponse response = PageResponse.ok();
+        response.setData(data);
+        response.setPage(page);
+        response.setTotal(Total);
+        response.setPageSize(pageSize);
+        response.setSize(size);
+        response.setRecords(records);
+        return response;
+    }
+
+}

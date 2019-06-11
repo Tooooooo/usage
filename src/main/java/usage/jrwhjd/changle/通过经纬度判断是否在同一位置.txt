@@ -1,0 +1,29 @@
+	//判断拜访时客户和业务员是否在同一位置，在同一位置返回1，不在同一位置返回0
+    int isFace2face(AddVisitRequest request){
+		//获取客户的经纬度
+        String partCord = request.getPartCord();
+		String[] partCordArray = partCord.split(",");
+        String partLongitude = partCordArray[0];
+        String partDimension = partCordArray[partCordArray.length-1];
+		//获取业务员的经纬度
+        String empCord = request.getEmpCord();
+        String[] empCordArray = empCord.split(",");
+        String empLongitude = empCordArray[0];
+        String empDimension = empCordArray[empCordArray.length-1];
+		//四舍五入，小数点后保留六位
+        BigDecimal partLongitudeBig = new BigDecimal(partLongitude).setScale(6,BigDecimal.ROUND_HALF_UP);
+        BigDecimal partDimensionBig = new BigDecimal(partDimension).setScale(6,BigDecimal.ROUND_HALF_UP);
+        BigDecimal empLongitudeBig = new BigDecimal(empLongitude).setScale(6,BigDecimal.ROUND_HALF_UP);
+        BigDecimal empDimensionBig = new BigDecimal(empDimension).setScale(6,BigDecimal.ROUND_HALF_UP);
+		//客户与业务员的经度、维度差值
+        BigDecimal sub_lon=empLongitudeBig.subtract(partLongitudeBig);
+        BigDecimal sub_dim=empDimensionBig.subtract(partDimensionBig);
+		//差值与设定好的范围进行对比，如果BigDecimal为小于val返回-1，如果BigDecimal为大于val返回1，如果BigDecimal为等于val返回0
+        int sub_lonCompareResult=sub_lon.abs().compareTo(new BigDecimal(0.03));
+        int sub_dimCompareResult=sub_dim.abs().compareTo(new BigDecimal(0.005));
+        if(sub_lonCompareResult <= 0 && sub_dimCompareResult <= 0){
+            return 1;
+        }else{
+            return 0;
+        }
+    }

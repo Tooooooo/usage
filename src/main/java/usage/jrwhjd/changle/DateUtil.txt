@@ -1,0 +1,198 @@
+package com.activity.visit.controller;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class DateUtil {
+    static SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");//设置日期格式
+
+	//获取结束时间，因sql中是<"结束时间"，故此处取的结束时间为当前时间+1天
+    public static String endDate(){
+        Date date = new Date();
+        Calendar cal = Calendar.getInstance();
+        int day = cal.get(Calendar.DATE);
+        cal.set(Calendar.DATE,day+1);
+        return df.format(cal.getTime());
+    }
+
+	//通过日d、周w、月m标识分别获取当前日期、当周周一日期、当月1号日期
+    public static String startDate(String sign){
+        Date date = new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        if(sign.equals("d")){
+            return df.format(date);
+        }else if(sign.equals("w")){
+            //查询当前日期是星期几
+            int w = cal.get(Calendar.DAY_OF_WEEK)-1 == 0 ? 7:cal.get(Calendar.DAY_OF_WEEK)-1;
+            cal.add(Calendar.DATE, -w);
+            return df.format(cal.getTime());
+        }else if(sign.equals("m")){
+            //获取当前月一号
+            cal.set(Calendar.DAY_OF_MONTH, 1);
+            return df.format(cal.getTime());
+        }else{
+            return df.format(getFirstDateOfMonth(getSeasonDate(date)[0]));
+        }
+    }
+
+	/*
+     * 获取当前月的第一天和最后一天(有平年和闰年区分)
+     */
+    public FirstAndLastDay getFirstAndLastDay() {
+        Calendar cale = null;
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        String firstDay, lastDay;
+        // 获取当前月的第一天  
+        cale = Calendar.getInstance();
+        cale.add(Calendar.MONTH, -1);
+        cale.set(Calendar.DAY_OF_MONTH, 1);
+        firstDay = format.format(cale.getTime());
+        // 获取当前月的最后一天  
+        cale = Calendar.getInstance();
+        cale.add(Calendar.MONTH, 0);
+        cale.set(Calendar.DAY_OF_MONTH, 0);
+        lastDay = format.format(cale.getTime());
+        FirstAndLastDay firstAndLastDay = new FirstAndLastDay();
+        firstAndLastDay.setFirstDay(firstDay);
+        firstAndLastDay.setLastDay(lastDay);
+        return firstAndLastDay;
+    }
+	
+    /**
+     * 取得月第一天
+     * @param date
+     * @return
+     */
+    public static Date getFirstDateOfMonth(Date date) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        c.set(Calendar.DAY_OF_MONTH, c.getActualMinimum(Calendar.DAY_OF_MONTH));
+        return c.getTime();
+    }
+
+    /**
+     * 取得季度天数
+     * @param date
+     * @return
+     */
+    public static int getDayOfSeason(Date date) {
+        int day = 0;
+        Date[] seasonDates = getSeasonDate(date);
+        for (Date date2 : seasonDates) {
+            day += getDayOfMonth(date2);
+        }
+        return day;
+    }
+
+    /**
+     * 取得季度月
+     * @param date
+     * @return
+     */
+    public static Date[] getSeasonDate(Date date) {
+        Date[] season = new Date[3];
+
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        int nSeason = getSeason(date);
+        if (nSeason == 1) {// 第一季度
+            c.set(Calendar.MONTH, Calendar.JANUARY);
+            season[0] = c.getTime();
+            c.set(Calendar.MONTH, Calendar.FEBRUARY);
+            season[1] = c.getTime();
+            c.set(Calendar.MONTH, Calendar.MARCH);
+            season[2] = c.getTime();
+        } else if (nSeason == 2) {// 第二季度
+            c.set(Calendar.MONTH, Calendar.APRIL);
+            season[0] = c.getTime();
+            c.set(Calendar.MONTH, Calendar.MAY);
+            season[1] = c.getTime();
+            c.set(Calendar.MONTH, Calendar.JUNE);
+            season[2] = c.getTime();
+        } else if (nSeason == 3) {// 第三季度
+            c.set(Calendar.MONTH, Calendar.JULY);
+            season[0] = c.getTime();
+            c.set(Calendar.MONTH, Calendar.AUGUST);
+            season[1] = c.getTime();
+            c.set(Calendar.MONTH, Calendar.SEPTEMBER);
+            season[2] = c.getTime();
+        } else if (nSeason == 4) {// 第四季度
+            c.set(Calendar.MONTH, Calendar.OCTOBER);
+            season[0] = c.getTime();
+            c.set(Calendar.MONTH, Calendar.NOVEMBER);
+            season[1] = c.getTime();
+            c.set(Calendar.MONTH, Calendar.DECEMBER);
+            season[2] = c.getTime();
+        }
+        return season;
+    }
+
+    /**
+     * 1 第一季度 2 第二季度 3 第三季度 4 第四季度
+     * @param date
+     * @return
+     */
+    public static int getSeason(Date date) {
+
+        int season = 0;
+
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        int month = c.get(Calendar.MONTH);
+        switch (month) {
+            case Calendar.JANUARY:
+            case Calendar.FEBRUARY:
+            case Calendar.MARCH:
+                season = 1;
+                break;
+            case Calendar.APRIL:
+            case Calendar.MAY:
+            case Calendar.JUNE:
+                season = 2;
+                break;
+            case Calendar.JULY:
+            case Calendar.AUGUST:
+            case Calendar.SEPTEMBER:
+                season = 3;
+                break;
+            case Calendar.OCTOBER:
+            case Calendar.NOVEMBER:
+            case Calendar.DECEMBER:
+                season = 4;
+                break;
+            default:
+                break;
+        }
+        return season;
+    }
+
+    /**
+     * 取得月天数
+     * @param date
+     * @return
+     */
+    public static int getDayOfMonth(Date date) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        return c.getActualMaximum(Calendar.DAY_OF_MONTH);
+    }
+
+    /**
+     * 获取一个月前日期
+     * @param
+     */
+    public static Date getOneMonthAgo(){
+        Date date = new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.add(Calendar.MONTH,-1);
+        return cal.getTime();
+    }
+
+}
